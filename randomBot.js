@@ -1,3 +1,10 @@
+//#region utils
+const result = {
+    win: 1,
+    draw: 0,
+    loss: -1
+};
+
 const moves = {
     rock: "R",
     paper: "P",
@@ -5,23 +12,6 @@ const moves = {
     water: "W",
     dynamite: "D"
 };
-
-const result = {
-    win: 1,
-    draw: 0,
-    loss: -1
-};
-
-
-class MovesTracker{
-    constructor(){
-        this.rock = 0;
-        this.paper = 0;
-        this.scissors = 0;
-        this.water = 0;
-        this.dynamite = 0;
-    }
-}
 
 class Round{
     // -1 loss, 0 draw, +1 win
@@ -94,28 +84,37 @@ class Round{
     }
 }
 
-
 class Random{
     static int(intMax){
         return Math.floor(Math.random() * intMax);
     }
 
-    static move(availableMoves){
+
+    static move(availableMoves, weights){
         let keys = Object.keys(availableMoves);
+
+        let sumWeights = 0;
+        for(let i = 0; i < keys.length; i++){
+            let key = keys[i];
+            sumWeights
+        }
+
         let i = Random.int(keys.length);
         let key = keys[i];
         let move = availableMoves[key];
+
+
         return move;
     }
 }
+//#endregion
 
-
-class Bot1 {
+class RandomBot {
 
     constructor(){
         this.myDynamiteCount = 100;
         this.opponentDynamiteCount = 100;
-        this.score = 0;
+        this.relScore = 0;
         this.roundsPlayed = 0;
         this.roundValue = 1;
 
@@ -126,18 +125,6 @@ class Bot1 {
             water: "W",
             dynamite: "D"
         };
-    }
-
-    randomInt(intMax){
-        return Math.floor(Math.random() * intMax);
-    }
-
-    randomMove(){
-        let keys = Object.keys(this.availableMoves);
-        let i = this.randomInt(keys.length);
-        let key = keys[i];
-        let move = this.availableMoves[key];
-        return move;
     }
 
     updateState(gamestate){
@@ -166,19 +153,25 @@ class Bot1 {
                 this.roundValue++;
             }
             else{
-                this.score = this.score + roundScore * this.roundValue;
+                let roundScoreMultiplied = roundScore * this.roundValue;
+                this.relScore = this.relScore + roundScoreMultiplied;
                 this.roundValue = 1;
             }
         }        
 
-        this.roundsPlayed++; 
+        this.roundsPlayed++;
+    }
+
+    decideMove(gamestate){
+        //random
+        return Random.move(this.availableMoves);
     }
 
     makeMove(gamestate) {
-        this.updateState(gamestate)
-        let move = Random.move(this.availableMoves);
+        this.updateState(gamestate);
+        let move = this.decideMove(gamestate);
         return move;
     }
 }
 
-module.exports = new Bot1();
+module.exports = new RandomBot();
