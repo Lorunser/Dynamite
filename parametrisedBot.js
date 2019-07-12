@@ -1,4 +1,5 @@
 //#region utils
+
 const result = {
     win: 1,
     draw: 0,
@@ -90,28 +91,45 @@ class Random{
     }
 
 
-    static move(availableMoves, weights){
+    static fromWeights(availableMoves, weights){
         let keys = Object.keys(availableMoves);
 
         let sumWeights = 0;
         for(let i = 0; i < keys.length; i++){
             let key = keys[i];
-            sumWeights
+            let weight = weights[key];
+            sumWeights += weight;
         }
+
+        let randomSelection = Math.random() * sumWeights;
+        let counter = 0;
+
+        for(let i = 0; i < keys.length; i++){
+            let key = keys[i];
+            let weight = weights[key];
+            
+            if(counter <= randomSelection && randomSelection <= counter + weight){
+                return availableMoves[key];
+            }
+            counter += weight;
+        }
+    }
+
+    static move(availableMoves, weights){
+        let keys = Object.keys(availableMoves);
 
         let i = Random.int(keys.length);
         let key = keys[i];
         let move = availableMoves[key];
-
 
         return move;
     }
 }
 //#endregion
 
-class RandomBot {
+class LearningBot {
 
-    constructor(){
+    constructor(drawWeights, standardWeights){
         this.myDynamiteCount = 100;
         this.opponentDynamiteCount = 100;
         this.relScore = 0;
@@ -125,6 +143,31 @@ class RandomBot {
             water: "W",
             dynamite: "D"
         };
+
+        //defaults
+        this.drawWeights = {
+            rock: 1,
+            paper: 1,
+            scissors: 0,
+            water: 0,
+            dynamite: 1
+        };
+
+        this.standardWeights = {
+            rock: 1,
+            paper: 1,
+            scissors: 1,
+            water: 0,
+            dynamite: 1
+        };
+
+        //passed as params
+        if(drawWeights){
+            this.drawWeights = drawWeights;
+        }
+        if(standardWeights){
+            this.standardWeights = standardWeights;
+        }
     }
 
     updateState(gamestate){
@@ -164,9 +207,33 @@ class RandomBot {
 
     decideMove(gamestate){
         //random
-        return Random.move(this.availableMoves);
+        let weights = this.standardWeights;
+        if(this.roundValue > 1){
+            weights = this.drawWeights;
+        }
+
+        return Random.fromWeights(this.availableMoves, weights);
     }
 
+    computeHypotheticalScore(gamestate){
+        let rounds = gamestate.rounds;
+        let opponentMoves = rounds.map((round) => round.p2);
+        let testBot = new LearningBot();
+        let mockstate = {rounds: []};
+
+        for(let i = 0; i < opponentMoves.length; i++){
+            let testMove = testBot.makeMove(mockstate);
+            let opponentMove = opponentMoves[i];
+
+            mockstate.rounds.push({
+                p1: testMove,
+                p2: opponentMove
+            });
+        }
+
+        return testBot.relScore;
+    }
+    
     makeMove(gamestate) {
         this.updateState(gamestate);
         let move = this.decideMove(gamestate);
@@ -174,5 +241,5 @@ class RandomBot {
     }
 }
 
-module.exports = new RandomBot();
-module.exports.Bot = RandomBot;
+module.exports = new LearningBot();
+module.exports.Bot = LearningBot;

@@ -224,12 +224,18 @@ class LearningBot {
 
         return testBot.relScore;
     }
-    
+
     makeMove(gamestate) {
         this.updateState(gamestate);
         let move = this.decideMove(gamestate);
+        /*
+        if(this.roundsPlayed > 1900){
+            console.log(this.relScore);
+        }
+        */
         return move;
     }
 }
 
 module.exports = new LearningBot();
+module.exports.Bot = LearningBot;
